@@ -1,10 +1,8 @@
 from cassandra.cluster import Cluster, Session
 from cassandra.auth import PlainTextAuthProvider
-from cassandra.cqlengine import columns
-from cassandra.cqlengine.models import Model
 import json
 import pandas as pd
-from pprint import pprint
+import ast
 
 CREDENTIALS_PATH = "credentials/"
 DATASET_PATH = "dataset/"
@@ -118,72 +116,35 @@ def createTables(session: Session):
 
 
 def loadData(session: Session):
-    # Load recipes data
     recipes_df = pd.read_csv(DATASET_PATH + "RAW_recipes.csv")
-    # Load interactions data
     interactions_df = pd.read_csv(DATASET_PATH + "RAW_interactions.csv")
+    recipes_df["description"].fillna("", inplace=True)
 
-    # Merge recipes and interactions dataframes on recipe id, averaging out each recipe's ratings
+    # Convert string representations of lists back to actual lists
+    for column in recipes_df.columns:
+        try:
+            recipes_df[column] = recipes_df[column].apply(ast.literal_eval)
+        except (ValueError, SyntaxError):
+            pass  # Skip columns that cannot be converted to lists
+
+    # Merge recipes and reviews dataframes on recipe id,
+    # averaging out each recipe's ratings
     merged_df = pd.merge(
         recipes_df,
-        interactions_df.groupby("recipe_id")["rating"]
+        interactions_df[["recipe_id", "rating"]]
+        .groupby(by="recipe_id")
         .mean()
-        .reset_index()
         .rename(columns={"rating": "avg_rating"}),
-        how="left",
         left_on="id",
         right_on="recipe_id",
     )
 
-    # Prepare the insert statement for recipes_details table
     insert_query = session.prepare(
         """
-        INSERT INTO recipes.recipes_details (id, name, minutes, contributor_id, submitted, tags, nutrition, n_steps, steps, description, ingredients, n_ingredients, avg_rating)
+        INSERT INTO recipes.recipes_details (name, id, minutes, contributor_id, submitted, tags, nutrition, n_steps, steps, description, ingredients, n_ingredients, avg_rating)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """
+        """
     )
 
-    # Iterate over each row in the merged DataFrame and insert data into the table
-    for idx, row in merged_df[:5].iterrows():
-        # Convert string representations of lists to actual lists and remove extra quotes
-        tags = [tag.strip("'''") for tag in row["tags"][1:-1].split(", ")]
-        nutrition = [float(n) for n in row["nutrition"][1:-1].split(", ")]
-
-        # Assuming steps are stored as a string list with extra triple quotes
-        steps = [step.strip("'''") for step in row["steps"][1:-1].split(", ")]
-        ingredients = [
-            ingredient.strip("'''")
-            for ingredient in row["ingredients"][1:-1].split(", ")
-        ]
-        # Execute the insert statement for each row
-        session.execute(
-            insert_query,
-            (
-                row["id"],
-                row["name"],
-                row["minutes"],
-                row["contributor_id"],
-                row["submitted"],
-                tags,
-                nutrition,
-                row["n_steps"],
-                steps,
-                row["description"],
-                ingredients,
-                row["n_ingredients"],
-                row.get(
-                    "avg_rating", None
-                ),  # Use .get() to handle missing avg_rating values
-            ),
-        )
-
-
-def stringFromDataframe(df: pd.DataFrame) -> str:
-    # Extract values from merged dataframe into a list
-    values_list = df.values.tolist()
-
-    # Flatten the two-dimensional list into a one-dimensional list
-    flattened_list = [item for sublist in values_list for item in sublist]
-
-    # Convert the flattened list to a single string separated by commas
-    return ",".join(map(str, flattened_list))
+    for row in merged_df.values.tolist():
+        session.execute(insert_query, row)
