@@ -3,6 +3,7 @@ from cassandra.auth import PlainTextAuthProvider
 import json
 import pandas as pd
 import ast
+import time
 
 CREDENTIALS_PATH = "credentials/"
 DATASET_PATH = "dataset/"
@@ -200,3 +201,17 @@ def loadData(session: Session):
 
     for row in df.values.tolist():
         session.execute(insert_query, row)
+        # Print out the progress and estimated time of completion
+        if (
+            idx % 100 == 0
+        ):  # Adjust the modulus value according to how often you want updates
+            elapsed_time = time.time() - start_time
+            rows_per_second = idx / elapsed_time
+            estimated_total_time = total_rows / rows_per_second
+            remaining_time = estimated_total_time - elapsed_time
+            print(
+                f"Inserted {idx} of {total_rows} records ({(idx/total_rows)*100:.2f}%)"
+            )
+            print(f"Estimated time remaining: {remaining_time/60:.2f} minutes")
+
+    print("Data loading complete.")
