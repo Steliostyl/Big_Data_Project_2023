@@ -3,10 +3,10 @@ import db_connection
 
 
 def main():
-    # recipes_df = pd.read_csv(DATASET_PATH + "RAW_recipes.csv")
-    # print(recipes_df["ingredients"])
     session = db_connection.connectToDB()
+    query = "SELECT * FROM recipes.recipes_details"
     db_connection.createTables(session)
+    db_connection.loadData(session)
     return
 
 

@@ -3,6 +3,8 @@ from cassandra.auth import PlainTextAuthProvider
 from cassandra.cqlengine import columns
 from cassandra.cqlengine.models import Model
 import json
+import pandas as pd
+from pprint import pprint
 
 CREDENTIALS_PATH = "credentials/"
 DATASET_PATH = "dataset/"
@@ -113,3 +115,44 @@ def createTables(session: Session):
     session.execute(create_recipes_by_tag_submitted)
     session.execute(create_recipes_by_tag_rating)
     session.execute(create_recipes_details)
+
+
+def loadData(session: Session):
+    recipes_df = pd.read_csv(DATASET_PATH + "RAW_recipes.csv")
+    interactions_df = pd.read_csv(DATASET_PATH + "RAW_interactions.csv")
+
+    # Merge recipes and reviews dataframes on recipe id,
+    # averaging out each recipe's ratings
+    merged_df = pd.merge(
+        recipes_df,
+        interactions_df[["recipe_id", "rating"]]
+        .groupby(by="recipe_id")
+        .mean()
+        .rename(columns={"rating": "avg_rating"}),
+        left_on="id",
+        right_on="recipe_id",
+    )
+
+    # Swap the positions of the first and second columns
+    # to correctly correspond with the order in the database
+    # table
+    recipe_detail_str = stringFromDataframe(merged_df[merged_df.columns[::-1]])
+
+    insert_recipes_details = f"""
+        INSERT INTO recipes.recipes_details
+        VALUES ({recipe_detail_str})
+    """
+
+    # Run insert queries
+    session.prepare(insert_recipes_details)
+
+
+def stringFromDataframe(df: pd.DataFrame) -> str:
+    # Extract values from merged dataframe into a list
+    values_list = df.values.tolist()
+
+    # Flatten the two-dimensional list into a one-dimensional list
+    flattened_list = [item for sublist in values_list for item in sublist]
+
+    # Convert the flattened list to a single string separated by commas
+    return ",".join(map(str, flattened_list))
