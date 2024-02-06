@@ -61,7 +61,7 @@ def createTables(session: Session):
 
     create_recipes_by_difficulty = """
         CREATE TABLE IF NOT EXISTS recipes.recipes_difficulty(
-            difficulty smallint,
+            difficulty text,
             avg_rating float,
             name text,
             id int,
@@ -103,7 +103,7 @@ def createTables(session: Session):
             ingredients list<text>,
             n_ingredients smallint,
             avg_rating float,
-            difficulty smallint,
+            difficulty text,
             keywords list<text>
             PRIMARY KEY (id)
         );
@@ -121,6 +121,15 @@ def split_name(name):
     return name.split()
 
 
+def assign_difficulty(row, tertiles):
+    if row["minutes"] <= tertiles[0]:
+        return "Easy"
+    elif row["minutes"] <= tertiles[1]:
+        return "Medium"
+    else:
+        return "Hard"
+
+
 def mergeDataframes():
     recipes_df = pd.read_csv(DATASET_PATH + "RAW_recipes.csv")
     interactions_df = pd.read_csv(DATASET_PATH + "RAW_interactions.csv")
@@ -135,8 +144,13 @@ def mergeDataframes():
 
     recipes_df["keywords"] = recipes_df["name"].apply(split_name)
 
-    # Merge recipes and reviews dataframes on recipe id,
-    # averaging out each recipe's ratings
+    tertiles = recipes_df["minutes"].quantile([1 / 3, 2 / 3]).tolist()
+
+    # Assign difficulty based on tertiles-
+    recipes_df["difficulty"] = recipes_df.apply(
+        lambda row: assign_difficulty(row, tertiles), axis=1
+    )
+
     merged_df = pd.merge(
         recipes_df,
         interactions_df[["recipe_id", "rating"]]
