@@ -1,8 +1,6 @@
-# Assuming your list is named 'my_list'
+import pandas as pd
 
-my_list = ["apple", "banana", "orange"]
+df = pd.read_csv("dataset/RAW_recipes.csv")
+missing_values_per_column = df.isna().sum()
 
-# Convert the list to a single string separated by commas
-result_string = ",".join(my_list)
-
-print(result_string)
+print(df[["submitted", "name", "id"]])

@@ -50,11 +50,11 @@ def createTables(session: Session):
     """
     create_recipes_by_keyword = """
         CREATE TABLE IF NOT EXISTS recipes.recipes_keyword(
-            keyword text,
+            keywords list<text>,
             avg_rating float,
             name text,
             id int,
-            PRIMARY KEY (keyword, avg_rating)
+            PRIMARY KEY (keywords, avg_rating)
         ) WITH CLUSTERING ORDER BY (avg_rating DESC);
     """
 
@@ -81,7 +81,6 @@ def createTables(session: Session):
 
     create_recipes_by_tag_rating = """
         CREATE TABLE IF NOT EXISTS recipes.recipes_tag_rating(
-            submitted date,
             avg_rating float,
             name text,
             id int,
@@ -103,6 +102,8 @@ def createTables(session: Session):
             ingredients list<text>,
             n_ingredients smallint,
             avg_rating float,
+            difficulty smallint,
+            keywords list<text>
             PRIMARY KEY (id)
         );
     """
@@ -115,7 +116,11 @@ def createTables(session: Session):
     session.execute(create_recipes_details)
 
 
-def loadData(session: Session):
+def split_name(name):
+    return name.split()
+
+
+def mergeDataframes():
     recipes_df = pd.read_csv(DATASET_PATH + "RAW_recipes.csv")
     interactions_df = pd.read_csv(DATASET_PATH + "RAW_interactions.csv")
     recipes_df.fillna({"name": "", "description": ""}, inplace=True)
@@ -126,6 +131,8 @@ def loadData(session: Session):
             recipes_df[column] = recipes_df[column].apply(ast.literal_eval)
         except (ValueError, SyntaxError):
             pass  # Skip columns that cannot be converted to lists
+
+    recipes_df["keywords"] = recipes_df["name"].apply(split_name)
 
     # Merge recipes and reviews dataframes on recipe id,
     # averaging out each recipe's ratings
@@ -138,6 +145,51 @@ def loadData(session: Session):
         left_on="id",
         right_on="recipe_id",
     )
+    return merged_df
+
+
+def loadData(session: Session):
+    df = mergeDataframes()
+
+    insert_query = session.prepare(
+        """
+        INSERT INTO recipes.recipes_keyword (keywords, avg_rating, name, id)
+        VALUES (?, ?, ?, ?);
+        """
+    )
+
+    for row in df[["keywords", "avg_rating", "name", "id"]].values.tolist():
+        session.execute(insert_query, row)
+
+    insert_query = session.prepare(
+        """
+        INSERT INTO recipes.recipes_difficulty (difficulty, avg_rating, name, id)
+        VALUES (?, ?, ?, ?);
+        """
+    )
+
+    for row in df[["difficulty", "avg_rating", "name", "id"]].values.tolist():
+        session.execute(insert_query, row)
+
+    insert_query = session.prepare(
+        """
+        INSERT INTO recipes.recipes_tag_submitted (tag, submitted, avg_rating, name, id)
+        VALUES (?, ?, ?, ?, ?);
+        """
+    )
+
+    for row in df[["tag", "submitted", "avg_rating", "name", "id"]].values.tolist():
+        session.execute(insert_query, row)
+
+    insert_query = session.prepare(
+        """
+        INSERT INTO recipes.recipes_tag_rating (difficulty, avg_rating, name, id)
+        VALUES (?, ?, ?, ?);
+        """
+    )
+
+    for row in df[["tag", "avg_rating", "name", "id"]].values.tolist():
+        session.execute(insert_query, row)
 
     insert_query = session.prepare(
         """
@@ -146,5 +198,5 @@ def loadData(session: Session):
         """
     )
 
-    for row in merged_df[:10].values.tolist():
+    for row in df.values.tolist():
         session.execute(insert_query, row)
