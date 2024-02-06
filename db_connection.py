@@ -118,10 +118,9 @@ def createTables(session: Session):
 
 
 def loadData(session: Session):
-    # Load recipes data
     recipes_df = pd.read_csv(DATASET_PATH + "RAW_recipes.csv")
-    # Load interactions data
     interactions_df = pd.read_csv(DATASET_PATH + "RAW_interactions.csv")
+    recipes_df["description"].fillna("", inplace=True)
 
     # Merge recipes and interactions dataframes on recipe id, averaging out each recipe's ratings
     merged_df = pd.merge(
@@ -143,13 +142,13 @@ def loadData(session: Session):
     """
     )
 
+    print(type(merged_df["nutrition"]))
+
     # Iterate over each row in the merged DataFrame and insert data into the table
-    for idx, row in merged_df[:5].iterrows():
+    for idx, row in merged_df.iterrows():
         # Convert string representations of lists to actual lists and remove extra quotes
         tags = [tag.strip("'''") for tag in row["tags"][1:-1].split(", ")]
         nutrition = [float(n) for n in row["nutrition"][1:-1].split(", ")]
-
-        # Assuming steps are stored as a string list with extra triple quotes
         steps = [step.strip("'''") for step in row["steps"][1:-1].split(", ")]
         ingredients = [
             ingredient.strip("'''")
@@ -171,9 +170,7 @@ def loadData(session: Session):
                 row["description"],
                 ingredients,
                 row["n_ingredients"],
-                row.get(
-                    "avg_rating", None
-                ),  # Use .get() to handle missing avg_rating values
+                row.get("avg_rating", None),
             ),
         )
 
