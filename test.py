@@ -1,6 +1,6 @@
-import pandas as pd
-
-df = pd.read_csv("dataset/RAW_recipes.csv")
-missing_values_per_column = df.isna().sum()
-
-print(df[["submitted", "name", "id"]])
+string = (
+    "name, id, minutes, contributor_id, submitted, tags, nutrition, n_steps,"
+    + "steps, description, ingredients, n_ingredients, avg_rating,"
+    + "difficulty, keywords"
+)
+print(string)

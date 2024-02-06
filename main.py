@@ -4,9 +4,9 @@ import db_connection
 
 def main():
     session = db_connection.connectToDB()
-    query = "SELECT id FROM recipes.recipes_details"
-    ans = session.execute(query)._current_rows
-    print(len(ans))
+    # query = "SELECT id FROM recipes.recipes_details"
+    # ans = session.execute(query)._current_rows
+    # print(len(ans))
     db_connection.createTables(session)
     db_connection.loadData(session)
     return

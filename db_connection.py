@@ -151,67 +151,42 @@ def mergeDataframes():
 
 def loadData(session: Session):
     df = mergeDataframes()
+    queries = [
+        ["popular_recipes", "submitted, avg_rating, name, id", 4],
+        ["recipes_keyword", "keywords, avg_rating, name, id", 4],
+        ["recipes_difficulty", "difficulty, avg_rating, name, id", 4],
+        ["recipes_by_tag_submitted", "tag, submitted, avg_rating, name, id", 5],
+        ["recipes_by_tag_rating", "tag, avg_rating, name, id", 4],
+        [
+            "recipes_details",
+            (
+                "name, id, minutes, contributor_id, submitted, tags, nutrition, n_steps,"
+                + "steps, description, ingredients, n_ingredients, avg_rating,"
+                + "difficulty, keywords"
+            ),
+            15,
+        ],
+    ]
+    for query in queries:
+        # Create a string with the desired number of question marks
+        question_marks = ", ".join(["?" for _ in range(query[2])])
+        query_text = f"""INSERT INTO recipes.{query[0]} ({query[1]}) VALUES ({question_marks});"""
+        print(query_text)
 
-    insert_query = session.prepare(
-        """
-        INSERT INTO recipes.recipes_keyword (keywords, avg_rating, name, id)
-        VALUES (?, ?, ?, ?);
-        """
-    )
+        insert_query = session.prepare(query_text)
 
-    for row in df[["keywords", "avg_rating", "name", "id"]].values.tolist():
-        session.execute(insert_query, row)
-
-    insert_query = session.prepare(
-        """
-        INSERT INTO recipes.recipes_difficulty (difficulty, avg_rating, name, id)
-        VALUES (?, ?, ?, ?);
-        """
-    )
-
-    for row in df[["difficulty", "avg_rating", "name", "id"]].values.tolist():
-        session.execute(insert_query, row)
-
-    insert_query = session.prepare(
-        """
-        INSERT INTO recipes.recipes_tag_submitted (tag, submitted, avg_rating, name, id)
-        VALUES (?, ?, ?, ?, ?);
-        """
-    )
-
-    for row in df[["tag", "submitted", "avg_rating", "name", "id"]].values.tolist():
-        session.execute(insert_query, row)
-
-    insert_query = session.prepare(
-        """
-        INSERT INTO recipes.recipes_tag_rating (difficulty, avg_rating, name, id)
-        VALUES (?, ?, ?, ?);
-        """
-    )
-
-    for row in df[["tag", "avg_rating", "name", "id"]].values.tolist():
-        session.execute(insert_query, row)
-
-    insert_query = session.prepare(
-        """
-        INSERT INTO recipes.recipes_details (name, id, minutes, contributor_id, submitted, tags, nutrition, n_steps, steps, description, ingredients, n_ingredients, avg_rating)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-        """
-    )
-
-    for row in df.values.tolist():
-        session.execute(insert_query, row)
-        # Print out the progress and estimated time of completion
-        if (
-            idx % 100 == 0
-        ):  # Adjust the modulus value according to how often you want updates
-            elapsed_time = time.time() - start_time
-            rows_per_second = idx / elapsed_time
-            estimated_total_time = total_rows / rows_per_second
-            remaining_time = estimated_total_time - elapsed_time
-            print(
-                f"Inserted {idx} of {total_rows} records ({(idx/total_rows)*100:.2f}%)"
-            )
-            print(f"Estimated time remaining: {remaining_time/60:.2f} minutes")
-
+        total_rows = len(df)
+        start_time = time.time()
+        for idx, row in enumerate(df.itertuples(index=False), start=1):
+            session.execute(insert_query, row)
+            # Print out the progress and estimated time of completion
+            if idx % 100 == 0:
+                elapsed_time = time.time() - start_time
+                rows_per_second = idx / elapsed_time
+                estimated_total_time = total_rows / rows_per_second
+                remaining_time = estimated_total_time - elapsed_time
+                print(
+                    f"Inserted {idx} of {total_rows} records ({(idx/total_rows)*100:.2f}%)"
+                )
+                print(f"Estimated time remaining: {remaining_time/60:.2f} minutes")
     print("Data loading complete.")
