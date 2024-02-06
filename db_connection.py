@@ -118,33 +118,64 @@ def createTables(session: Session):
 
 
 def loadData(session: Session):
+    # Load recipes data
     recipes_df = pd.read_csv(DATASET_PATH + "RAW_recipes.csv")
+    # Load interactions data
     interactions_df = pd.read_csv(DATASET_PATH + "RAW_interactions.csv")
 
-    # Merge recipes and reviews dataframes on recipe id,
-    # averaging out each recipe's ratings
+    # Merge recipes and interactions dataframes on recipe id, averaging out each recipe's ratings
     merged_df = pd.merge(
         recipes_df,
-        interactions_df[["recipe_id", "rating"]]
-        .groupby(by="recipe_id")
+        interactions_df.groupby("recipe_id")["rating"]
         .mean()
+        .reset_index()
         .rename(columns={"rating": "avg_rating"}),
+        how="left",
         left_on="id",
         right_on="recipe_id",
     )
 
-    # Swap the positions of the first and second columns
-    # to correctly correspond with the order in the database
-    # table
-    recipe_detail_str = stringFromDataframe(merged_df[merged_df.columns[::-1]])
-
-    insert_recipes_details = f"""
-        INSERT INTO recipes.recipes_details
-        VALUES ({recipe_detail_str})
+    # Prepare the insert statement for recipes_details table
+    insert_query = session.prepare(
+        """
+        INSERT INTO recipes.recipes_details (id, name, minutes, contributor_id, submitted, tags, nutrition, n_steps, steps, description, ingredients, n_ingredients, avg_rating)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """
+    )
 
-    # Run insert queries
-    session.prepare(insert_recipes_details)
+    # Iterate over each row in the merged DataFrame and insert data into the table
+    for idx, row in merged_df[:5].iterrows():
+        # Convert string representations of lists to actual lists and remove extra quotes
+        tags = [tag.strip("'''") for tag in row["tags"][1:-1].split(", ")]
+        nutrition = [float(n) for n in row["nutrition"][1:-1].split(", ")]
+
+        # Assuming steps are stored as a string list with extra triple quotes
+        steps = [step.strip("'''") for step in row["steps"][1:-1].split(", ")]
+        ingredients = [
+            ingredient.strip("'''")
+            for ingredient in row["ingredients"][1:-1].split(", ")
+        ]
+        # Execute the insert statement for each row
+        session.execute(
+            insert_query,
+            (
+                row["id"],
+                row["name"],
+                row["minutes"],
+                row["contributor_id"],
+                row["submitted"],
+                tags,
+                nutrition,
+                row["n_steps"],
+                steps,
+                row["description"],
+                ingredients,
+                row["n_ingredients"],
+                row.get(
+                    "avg_rating", None
+                ),  # Use .get() to handle missing avg_rating values
+            ),
+        )
 
 
 def stringFromDataframe(df: pd.DataFrame) -> str:
