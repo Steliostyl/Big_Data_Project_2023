@@ -118,7 +118,7 @@ def createTables(session: Session):
 def loadData(session: Session):
     recipes_df = pd.read_csv(DATASET_PATH + "RAW_recipes.csv")
     interactions_df = pd.read_csv(DATASET_PATH + "RAW_interactions.csv")
-    recipes_df["description"].fillna("", inplace=True)
+    recipes_df.fillna({"name": "", "description": ""}, inplace=True)
 
     # Convert string representations of lists back to actual lists
     for column in recipes_df.columns:
@@ -146,5 +146,5 @@ def loadData(session: Session):
         """
     )
 
-    for row in merged_df.values.tolist():
+    for row in merged_df[:10].values.tolist():
         session.execute(insert_query, row)
