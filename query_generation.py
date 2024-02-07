@@ -1,5 +1,3 @@
-from pprint import pprint
-
 # Defines table schema using a dictionary where key is name of the table and its value is another dictionary containing all the columns of the table along with their cassandra datatypes, primary keys and clustering keys used when creating each table.
 
 TABLES = {
@@ -92,12 +90,11 @@ def getAllCreateTableQueries() -> list:
 
 def getInsertQuery(table_name) -> str:
     table = TABLES[table_name]
-    fields_string = ", ".join(
-        [f"{key} {value}" for key, value in table["fields"].items()]
-    )
-    question_marks = ", ".join(["?" for _ in range(len(table["fields"]))])
+    keys_list = list(table["fields"].keys())
+    keys_string = ", ".join(keys_list)
+    question_marks = ", ".join(["?" for _ in range(len(keys_list))])
     query_text = (
-        f"""INSERT INTO {table_name} ({fields_string}) VALUES ({question_marks});"""
+        f"""INSERT INTO {table_name} ({keys_string}) VALUES ({question_marks});"""
     )
     return query_text
 
@@ -109,6 +106,3 @@ def getAllInsertQueries():
         fields.append([k for k in TABLES[t]["fields"].keys()])
         queries.append(getInsertQuery(t))
     return (fields, queries)
-
-
-pprint(getAllInsertQueries()[1])

@@ -5,7 +5,6 @@ import pandas as pd
 import ast
 import time
 import query_generation
-from pprint import pprint
 
 CREDENTIALS_PATH = "credentials/"
 DATASET_PATH = "dataset/"
@@ -108,11 +107,14 @@ def loadData(session: Session):
     (fields, queries) = query_generation.getAllInsertQueries()
 
     for index, query in enumerate(queries):
+        print(query)
+        insert_query = session.prepare(query)
         current_fields = fields[index]
         total_rows = len(df)
         start_time = time.time()
-        for idx, row in enumerate(df[current_fields].itertuples(index=False), start=1):
-            session.execute(query, row)
+        values = df[current_fields].values.tolist()
+        for idx, row in enumerate(values, start=1):
+            session.execute(insert_query, row)
             # Print out the progress and estimated time of completion
             if idx % 100 == 0:
                 elapsed_time = time.time() - start_time
