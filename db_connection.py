@@ -54,7 +54,7 @@ def createTables(session: Session):
             avg_rating float,
             name text,
             id int,
-            PRIMARY KEY (keywords, avg_rating)
+            PRIMARY KEY (id, avg_rating)
         ) WITH CLUSTERING ORDER BY (avg_rating DESC);
     """
 
@@ -75,7 +75,7 @@ def createTables(session: Session):
             avg_rating float,
             name text,
             id int,
-            PRIMARY KEY (tag, submitted, avg_rating)
+            PRIMARY KEY (id, submitted, avg_rating)
         ) WITH CLUSTERING ORDER BY (submitted DESC, avg_rating DESC);
     """
 
@@ -84,7 +84,7 @@ def createTables(session: Session):
             avg_rating float,
             name text,
             id int,
-            PRIMARY KEY (submitted, avg_rating)
+            PRIMARY KEY (id, avg_rating)
         ) WITH CLUSTERING ORDER BY (avg_rating DESC);
     """
     create_recipes_details = """
@@ -103,7 +103,7 @@ def createTables(session: Session):
             n_ingredients smallint,
             avg_rating float,
             difficulty text,
-            keywords list<text>
+            keywords list<text>,
             PRIMARY KEY (id)
         );
     """

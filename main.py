@@ -8,7 +8,6 @@ def main():
     # ans = session.execute(query)._current_rows
     # print(len(ans))
     db_connection.createTables(session)
-    db_connection.loadData(session)
     return
 
 
