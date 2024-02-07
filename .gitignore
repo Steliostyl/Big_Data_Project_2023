@@ -156,3 +156,4 @@ credentials/
 *.bkp
 *.tmp
 dataset/
+#test.py

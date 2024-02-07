@@ -4,12 +4,13 @@ import db_connection
 
 def main():
     session = db_connection.connectToDB()
-    # query = "SELECT id FROM recipes.recipes_details"
-    # ans = session.execute(query)._current_rows
-    # print(len(ans))
+    db_connection.dropAllTables(session)
     db_connection.createTables(session)
     db_connection.loadData(session)
-    return
+
+    query = "SELECT id FROM recipes.recipes_details"
+    ans = session.execute(query)._current_rows
+    print(len(ans))
 
 
 if __name__ == "__main__":
