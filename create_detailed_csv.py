@@ -1,5 +1,3 @@
-from cassandra.cluster import Cluster, Session
-from cassandra.auth import PlainTextAuthProvider
 import pandas as pd
 
 DATASET_PATH = "dataset/"
