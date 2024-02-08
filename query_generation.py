@@ -85,7 +85,15 @@ def getCreateTableQuery(table_name) -> str:
 
 
 def getAllCreateTableQueries() -> list:
-    return [getCreateTableQuery(t) for t in TABLES]
+    queries = [getCreateTableQuery(t) for t in TABLES]
+    indices = [
+        ["keywords_index", "recipes_keywords(keywords)"],
+        ["tags_index", "recipes_tag_submitted(tags)"],
+        ["tags_index", "recipes_tag_rating(tags)"],
+    ]
+    for index in indices:
+        queries.append(f"CREATE INDEX IF NOT EXISTS {index[0]} ON {index[1]};")
+    return queries
 
 
 def getInsertQuery(table_name) -> str:

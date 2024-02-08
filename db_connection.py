@@ -43,16 +43,6 @@ def createTables(session: Session):
 
     create_table_queries = query_generation.getAllCreateTableQueries()
     [session.execute(q) for q in create_table_queries]
-
-    session.execute(
-        """CREATE INDEX IF NOT EXISTS keywords_index ON recipes_keywords (keywords);"""
-    )
-    session.execute(
-        """CREATE INDEX IF NOT EXISTS tags_index ON recipes_tag_submitted (tags);"""
-    )
-    session.execute(
-        """CREATE INDEX IF NOT EXISTS tags_index ON recipes_tag_rating (tags);"""
-    )
     print("Created tables!")
 
 
