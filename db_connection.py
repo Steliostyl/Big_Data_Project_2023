@@ -8,6 +8,9 @@ import query_generation
 
 CREDENTIALS_PATH = "credentials/"
 DATASET_PATH = "dataset/"
+SAT_QUERY = (
+    "SELECT table_name FROM system_schema.tables WHERE keyspace_name = 'recipes'"
+)
 
 
 def connectToDB():
@@ -129,13 +132,20 @@ def executeSelectQueries(session: Session):
 
 
 def dropAllTables(session: Session):
-    keyspace_name = "recipes"
-    query = f"SELECT table_name FROM system_schema.tables WHERE keyspace_name = '{keyspace_name}'"
-    result = session.execute(query)
+    result = session.execute(SAT_QUERY)
     tables = [row.table_name for row in result]
 
     # Drop each table
     for table in tables:
-        drop_query = f"DROP TABLE IF EXISTS {keyspace_name}.{table}"
+        drop_query = f"DROP TABLE IF EXISTS recipes.{table}"
         session.execute(drop_query)
         print(f"Dropped table: {table}")
+
+
+def printAllTablesLength(session: Session):
+    result = session.execute(SAT_QUERY)
+    tables = [row.table_name for row in result]
+    for table in tables:
+        select_query = f"SELECT id FROM {table}"
+        ans = session.execute(select_query)._current_rows
+        print(f"Table {table} has {len(ans)} rows.")
