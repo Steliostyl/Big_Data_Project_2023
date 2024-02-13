@@ -1,13 +1,9 @@
-import pandas as pd
-import db_connection
+import db_functions
 
 
 def main():
-    session = db_connection.connectToDB()
-    db_connection.printAllTablesLength(session)
-    # db_connection.dropAllTables(session)
-    # db_connection.createTables(session)
-    # db_connection.loadData(session)
+    session = db_functions.connectToDB("paris")
+    db_functions.printAllTablesLength(session)
 
 
 if __name__ == "__main__":
