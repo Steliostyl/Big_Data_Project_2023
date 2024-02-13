@@ -5,6 +5,7 @@ import pandas as pd
 import ast
 import time
 import query_generation
+from datetime import datetime
 
 CREDENTIALS_PATH = "credentials/"
 DATASET_PATH = "dataset/"
@@ -141,11 +142,35 @@ def printAllTablesLength(session: Session):
         print(f"Table {table} has {len(ans)} rows.")
 
 
-def executeSelectQueries(session: Session):
-    # Example keywords
-    keywords = ["tasty", "amazing", "pasta"]
-    # keywords = input("Input keywords seperated by commas").split(",")
-    keywords_query = """SELECT * FROM recipes_keywords WHERE keywords CONTAINS IN ?"""
+def executeSelectQueries(session: Session) -> list[pd.DataFrame]:
+    answers = []
+    answers.append(loadDataIntoDataframe(executeSimpleSelectQuery(session)))
+    try:
+        answers.append(loadDataIntoDataframe(executeDateRangeQuery(session)))
+    except:
+        pass
 
-    rows = session.execute(keywords_query, (keywords,))
-    return rows
+    return answers
+
+
+def executeDateRangeQuery(session: Session):
+    start_date = datetime(2012, 1, 1).strftime("%Y-%m-%d")
+    end_date = datetime(2012, 5, 31).strftime("%Y-%m-%d")
+
+    query = f"SELECT * FROM popular_recipes WHERE submitted >= '{start_date}' AND submitted <= '{end_date}'"
+    return session.execute(query)
+
+
+def executeSimpleSelectQuery(session: Session, table_name="popular_recipes"):
+    return session.execute(f"SELECT * FROM {table_name}")
+
+
+def decryptTimestamp(timestamp):
+    return datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d")
+
+
+def loadDataIntoDataframe(recipes: object):
+    data = []
+    columns = recipes.column_names
+    data = [dict(zip(columns, row)) for row in recipes]
+    return pd.DataFrame(data)
