@@ -97,16 +97,16 @@ def mergeDataframes():
 
 
 def loadData(session: Session):
-    df = mergeDataframes()
-    (fields, queries) = query_generation.getAllInsertQueries()
+    merged_df = mergeDataframes()
+    (dataframes, queries) = query_generation.getAllInsertQueries(merged_df)
 
     for index, query in enumerate(queries):
         print(query)
         insert_query = session.prepare(query)
-        current_fields = fields[index]
+        df = dataframes[index]
         total_rows = len(df)
+        values = df.values.tolist()
         start_time = time.time()
-        values = df[current_fields].values.tolist()
         for idx, row in enumerate(values, start=1):
             session.execute(insert_query, row)
             # Print out the progress and estimated time of completion

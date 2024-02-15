@@ -40,17 +40,13 @@ def main():
 
     # 4o erwtima
     db_responses.append(
-        session.execute(
-            "SELECT * FROM recipes_tag_rating WHERE tags CONTAINS 'course' ORDER BY avg_rating DESC, name ASC ALLOW FILTERING; "
-        )
+        session.execute("SELECT * FROM recipes_tag_rating WHERE tag = 'course';")
     )
     # sort in python
 
     # 5o erwtima
     db_responses.append(
-        session.execute(
-            "SELECT * FROM recipes_tag_submitted WHERE tags CONTAINS 'cocktails' ALLOW FILTERING;"
-        )
+        session.execute("SELECT * FROM recipes_tag_submitted WHERE tag = 'course';")
     )
     # sort in python
 

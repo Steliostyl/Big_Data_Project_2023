@@ -1,3 +1,5 @@
+import pandas as pd
+
 # Defines table schema using a dictionary where key is name of the table and its value is another dictionary containing all the columns of the table along with their cassandra datatypes, primary keys and clustering keys used when creating each table.
 
 TABLES = {
@@ -13,18 +15,18 @@ TABLES = {
     },
     "recipes_keywords": {
         "fields": {
-            "id": "int",
-            "keywords": "set<text>",
+            "keyword": "text",
             "avg_rating": "float",
             "name": "text",
+            "id": "int",
         },
-        "primary_key": "PRIMARY KEY (id, avg_rating, name)",
+        "primary_key": "PRIMARY KEY (keyword, avg_rating, name)",
         "clustering_key": "WITH CLUSTERING ORDER BY (avg_rating DESC, name ASC)",
     },
     "recipes_difficulty": {
         "fields": {
-            "id": "int",
             "difficulty": "text",
+            "id": "int",
             "avg_rating": "float",
             "name": "text",
         },
@@ -33,24 +35,24 @@ TABLES = {
     },
     "recipes_tag_submitted": {
         "fields": {
-            "id": "int",
-            "tags": "set<text>",
+            "tag": "text",
             "submitted": "date",
             "avg_rating": "float",
+            "id": "int",
             "name": "text",
         },
-        "primary_key": "PRIMARY KEY (id, submitted, avg_rating, name)",
-        "clustering_key": "WITH CLUSTERING ORDER BY (submitted DESC, avg_rating DESC, name ASC)",
+        "primary_key": "PRIMARY KEY (tag, submitted, avg_rating, id)",
+        "clustering_key": "WITH CLUSTERING ORDER BY (submitted DESC, avg_rating DESC, id ASC)",
     },
     "recipes_tag_rating": {
         "fields": {
+            "tag": "text",
             "id": "int",
             "avg_rating": "float",
-            "tags": "set<text>",
             "name": "text",
         },
-        "primary_key": "PRIMARY KEY (id, avg_rating, name)",
-        "clustering_key": "WITH CLUSTERING ORDER BY (avg_rating DESC, name ASC)",
+        "primary_key": "PRIMARY KEY (tag, avg_rating, id)",
+        "clustering_key": "WITH CLUSTERING ORDER BY (avg_rating DESC, id ASC)",
     },
     "recipes_details": {
         "fields": {
@@ -107,10 +109,19 @@ def getInsertQuery(table_name) -> str:
     return query_text
 
 
-def getAllInsertQueries():
-    fields = []
+def getAllInsertQueries(df: pd.DataFrame):
+    dataframes = []
     queries = []
     for t in TABLES:
-        fields.append([k for k in TABLES[t]["fields"].keys()])
+        new_df = df.copy(deep=True)
         queries.append(getInsertQuery(t))
-    return (fields, queries)
+        if t == "recipes_tag_rating" or t == "recipes_tag_submitted":
+            new_df = df.explode("tags")
+            new_df.rename(columns={"tags": "tag"}, inplace=True)
+        elif t == "recipes_keywords":
+            new_df = df.explode("keywords")
+            new_df.rename(columns={"keywords": "keyword"}, inplace=True)
+
+        new_df = new_df[[k for k in TABLES[t]["fields"].keys()]]
+        dataframes.append(new_df)
+    return (dataframes, queries)
