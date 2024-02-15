@@ -8,8 +8,8 @@ TABLES = {
             "avg_rating": "float",
             "name": "text",
         },
-        "primary_key": "PRIMARY KEY (id, submitted, avg_rating)",
-        "clustering_key": "WITH CLUSTERING ORDER BY (submitted ASC, avg_rating DESC)",
+        "primary_key": "PRIMARY KEY (id, submitted, avg_rating, name)",
+        "clustering_key": "WITH CLUSTERING ORDER BY (submitted ASC, avg_rating DESC, name ASC)",
     },
     "recipes_keywords": {
         "fields": {
@@ -23,13 +23,13 @@ TABLES = {
     },
     "recipes_difficulty": {
         "fields": {
-            "difficulty": "text",
             "id": "int",
+            "difficulty": "text",
             "avg_rating": "float",
             "name": "text",
         },
-        "primary_key": "PRIMARY KEY (id, avg_rating, name)",
-        "clustering_key": "WITH CLUSTERING ORDER BY (avg_rating DESC, id ASC)",
+        "primary_key": "PRIMARY KEY (id, difficulty, avg_rating, name)",
+        "clustering_key": "WITH CLUSTERING ORDER BY (difficulty ASC, avg_rating DESC, id ASC)",
     },
     "recipes_tag_submitted": {
         "fields": {
