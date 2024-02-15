@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+
 
 DATASET_PATH = "dataset/"
 
@@ -45,3 +47,22 @@ print(merged_df.head(10))
 
 # Save the merged_df DataFrame to a CSV file
 merged_df.to_csv((DATASET_PATH + "merged_recipes.csv"), index=False)
+
+
+# Calculate the size of each subset
+num_subsets = 10
+subset_size = np.ceil(len(merged_df) / num_subsets).astype(int)
+
+# Split the DataFrame into subsets and save each to a CSV
+for i in range(num_subsets):
+    start_idx = i * subset_size
+    end_idx = start_idx + subset_size
+    subset_df = merged_df.iloc[start_idx:end_idx]
+
+    # Construct the filename for each subset
+    subset_filename = f"{DATASET_PATH}merged_recipes_subset_{i+1}.csv"
+
+    # Save the subset to a CSV file
+    subset_df.to_csv(subset_filename, index=False)
+
+    print(f"Saved subset {i+1} to {subset_filename}")
