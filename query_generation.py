@@ -15,12 +15,12 @@ TABLES = {
     },
     "recipes_keywords": {
         "fields": {
-            "keyword": "text",
+            "id": "int",
+            "keywords": "set<text>",
             "avg_rating": "float",
             "name": "text",
-            "id": "int",
         },
-        "primary_key": "PRIMARY KEY (keyword, avg_rating, name)",
+        "primary_key": "PRIMARY KEY (id, avg_rating, name)",
         "clustering_key": "WITH CLUSTERING ORDER BY (avg_rating DESC, name ASC)",
     },
     "recipes_difficulty": {
@@ -88,13 +88,9 @@ def getCreateTableQuery(table_name) -> str:
 
 def getAllCreateTableQueries() -> list:
     queries = [getCreateTableQuery(t) for t in TABLES]
-    indices = [
-        ["keywords_index", "recipes_keywords(keywords)"],
-        ["tags_index", "recipes_tag_submitted(tags)"],
-        ["tags_index", "recipes_tag_rating(tags)"],
-    ]
-    # for index in indices:
-    #     queries.append(f"CREATE INDEX IF NOT EXISTS {index[0]} ON {index[1]};")
+    queries.append(
+        f"CREATE INDEX IF NOT EXISTS keywords_index ON recipes_keywords(keywords);"
+    )
     return queries
 
 
@@ -118,9 +114,6 @@ def getAllInsertQueries(df: pd.DataFrame):
         if t == "recipes_tag_rating" or t == "recipes_tag_submitted":
             new_df = df.explode("tags")
             new_df.rename(columns={"tags": "tag"}, inplace=True)
-        elif t == "recipes_keywords":
-            new_df = df.explode("keywords")
-            new_df.rename(columns={"keywords": "keyword"}, inplace=True)
 
         new_df = new_df[[k for k in TABLES[t]["fields"].keys()]]
         dataframes.append(new_df)
