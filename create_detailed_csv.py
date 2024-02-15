@@ -46,23 +46,13 @@ merged_df = pd.merge(
 print(merged_df.head(10))
 
 # Save the merged_df DataFrame to a CSV file
-merged_df.to_csv((DATASET_PATH + "merged_recipes.csv"), index=False)
+# merged_df.to_csv((DATASET_PATH + "merged_recipes.csv"), index=False)
 
 
-# Calculate the size of each subset
-num_subsets = 10
-subset_size = np.ceil(len(merged_df) / num_subsets).astype(int)
+# Select 10,000 random records from merged_df
+random_sample_df = merged_df.sample(
+    n=1000, random_state=42
+)  # Set a random state for reproducibility
 
-# Split the DataFrame into subsets and save each to a CSV
-for i in range(num_subsets):
-    start_idx = i * subset_size
-    end_idx = start_idx + subset_size
-    subset_df = merged_df.iloc[start_idx:end_idx]
-
-    # Construct the filename for each subset
-    subset_filename = f"{DATASET_PATH}merged_recipes_subset_{i+1}.csv"
-
-    # Save the subset to a CSV file
-    subset_df.to_csv(subset_filename, index=False)
-
-    print(f"Saved subset {i+1} to {subset_filename}")
+# Save the random sample to a new CSV file
+random_sample_df.to_csv(DATASET_PATH + "1000_sampled_recipes.csv", index=False)

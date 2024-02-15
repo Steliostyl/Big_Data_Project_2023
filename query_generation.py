@@ -8,8 +8,8 @@ TABLES = {
             "avg_rating": "float",
             "name": "text",
         },
-        "primary_key": "PRIMARY KEY (id, submitted, avg_rating, name)",
-        "clustering_key": "WITH CLUSTERING ORDER BY (submitted ASC, avg_rating DESC, name ASC)",
+        "primary_key": "PRIMARY KEY (submitted, avg_rating, id)",
+        "clustering_key": "WITH CLUSTERING ORDER BY (avg_rating DESC, id ASC)",
     },
     "recipes_keywords": {
         "fields": {
@@ -28,8 +28,8 @@ TABLES = {
             "avg_rating": "float",
             "name": "text",
         },
-        "primary_key": "PRIMARY KEY (id, difficulty, avg_rating, name)",
-        "clustering_key": "WITH CLUSTERING ORDER BY (difficulty ASC, avg_rating DESC, id ASC)",
+        "primary_key": "PRIMARY KEY (difficulty, avg_rating, name)",
+        "clustering_key": "WITH CLUSTERING ORDER BY (avg_rating DESC, name ASC)",
     },
     "recipes_tag_submitted": {
         "fields": {
@@ -70,7 +70,7 @@ TABLES = {
             "difficulty": "text",
             "keywords": "set<text>",
         },
-        "primary_key": "PRIMARY KEY (id)",
+        "primary_key": "PRIMARY KEY (name)",
         "clustering_key": "",
     },
 }
@@ -91,8 +91,8 @@ def getAllCreateTableQueries() -> list:
         ["tags_index", "recipes_tag_submitted(tags)"],
         ["tags_index", "recipes_tag_rating(tags)"],
     ]
-    for index in indices:
-        queries.append(f"CREATE INDEX IF NOT EXISTS {index[0]} ON {index[1]};")
+    # for index in indices:
+    #     queries.append(f"CREATE INDEX IF NOT EXISTS {index[0]} ON {index[1]};")
     return queries
 
 

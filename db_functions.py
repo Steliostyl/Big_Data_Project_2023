@@ -14,7 +14,7 @@ SAT_QUERY = (
 )
 
 
-def connectToDB(name="stelios"):
+def connectToDB(name="paris"):
     path = CREDENTIALS_PATH + name + "_"
     cloud_config = {
         "secure_connect_bundle": path + "secure-connect-big-data-project-db.zip"
@@ -64,8 +64,8 @@ def assign_difficulty(row, tertiles):
 
 
 def mergeDataframes():
-    recipes_df = pd.read_csv(DATASET_PATH + "RAW_recipes.csv")
-    interactions_df = pd.read_csv(DATASET_PATH + "RAW_interactions.csv")
+    recipes_df = pd.read_csv(DATASET_PATH + "sample_RAW_recipes.csv")
+    interactions_df = pd.read_csv(DATASET_PATH + "sample_RAW_interactions.csv")
     recipes_df.fillna({"name": "", "description": ""}, inplace=True)
 
     # Convert string representations of lists back to actual lists
