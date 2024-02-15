@@ -17,41 +17,41 @@ def main():
     db_responses = []
 
     # 1o erwtima
-    # db_responses.append(
-    #     session.execute(
-    #         "SELECT * FROM popular_recipes WHERE submitted >= '2007-01-01' AND submitted <= '2012-05-31' ALLOW FILTERING;"
-    #     )
-    # )
+    db_responses.append(
+        session.execute(
+            "SELECT * FROM popular_recipes WHERE submitted >= '2007-01-01' AND submitted <= '2012-05-31' ALLOW FILTERING;"
+        )
+    )
     # sort in python
 
     # 2o erwtima
-    # db_responses.append(
-    #     session.execute(
-    #         "SELECT * FROM recipes_details WHERE name = 'curried bean salad' ;"
-    #     )
-    # )
+    db_responses.append(
+        session.execute(
+            "SELECT * FROM recipes_details WHERE name = 'curried bean salad' ;"
+        )
+    )
 
     # 3o erwtima
-    # db_responses.append(
-    #     session.execute(
-    #         "SELECT * FROM recipes_difficulty WHERE difficulty = 'Easy' ALLOW FILTERING;"
-    #     )
-    # )
+    db_responses.append(
+        session.execute(
+            "SELECT * FROM recipes_difficulty WHERE difficulty = 'Easy' ALLOW FILTERING;"
+        )
+    )
 
     # 4o erwtima
-    # db_responses.append(
-    #     session.execute(
-    #         "SELECT * FROM recipes_tag_rating WHERE tags CONTAINS 'course' ORDER BY avg_rating DESC, name ASC ALLOW FILTERING; "
-    #     )
-    # )
+    db_responses.append(
+        session.execute(
+            "SELECT * FROM recipes_tag_rating WHERE tags CONTAINS 'course' ORDER BY avg_rating DESC, name ASC ALLOW FILTERING; "
+        )
+    )
     # sort in python
 
     # 5o erwtima
-    # db_responses.append(
-    #     session.execute(
-    #         "SELECT * FROM recipes_tag_submitted WHERE tags CONTAINS 'cocktails' ALLOW FILTERING;"
-    #     )
-    # )
+    db_responses.append(
+        session.execute(
+            "SELECT * FROM recipes_tag_submitted WHERE tags CONTAINS 'cocktails' ALLOW FILTERING;"
+        )
+    )
     # sort in python
 
     for resp in db_responses:
