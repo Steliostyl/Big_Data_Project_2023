@@ -56,7 +56,6 @@ def main():
 
     for resp in db_responses:
         recipes_df = db_functions.loadDataIntoDataframe(resp)
-        # print(f"\n{recipes_df}")
         print(recipes_df.head(20))
 
 
