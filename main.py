@@ -7,10 +7,15 @@ def main():
     # answers_df = db_functions.executeSelectQueries(session)
 
     # QUERIES
-    queries = [f"SELECT * FROM popular_recipes", f"SELECT * FROM popular_recipes"]
-    for query in queries:
-        recipes_df = db_functions.loadDataIntoDataframe(session.execute(query))
-        print(f"\n{query}")
+    db_responses = []
+    db_responses.append(session.execute("SELECT * FROM popular_recipes"))
+    db_responses.append(session.execute("SELECT * FROM popular_recipes"))
+    db_responses.append(session.execute("SELECT * FROM popular_recipes"))
+    db_responses.append(session.execute("SELECT * FROM popular_recipes"))
+
+    for resp in db_responses:
+        recipes_df = db_functions.loadDataIntoDataframe(resp)
+        print(f"\n{recipes_df}")
         print(recipes_df.head(20))
 
 
