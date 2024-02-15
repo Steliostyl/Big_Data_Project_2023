@@ -1,3 +1,4 @@
+from cassandra import ConsistencyLevel
 from cassandra.cluster import Cluster, Session
 from cassandra.auth import PlainTextAuthProvider
 import json
@@ -6,6 +7,7 @@ import ast
 import time
 import query_generation
 from datetime import datetime
+from cassandra.query import SimpleStatement
 
 CREDENTIALS_PATH = "credentials/"
 DATASET_PATH = "dataset/"
@@ -96,7 +98,7 @@ def mergeDataframes():
     return merged_df
 
 
-def loadData(session: Session):
+def insertData(session: Session):
     merged_df = mergeDataframes()
     (dataframes, queries) = query_generation.getAllInsertQueries(merged_df)
 
@@ -120,6 +122,37 @@ def loadData(session: Session):
                 )
                 print(f"Estimated time remaining: {remaining_time/60:.2f} minutes")
     print("Data loading complete.")
+
+
+def insertDataWithConsistency(session: Session, consistency_level):
+    df = mergeDataframes()
+    (dataframes, queries) = query_generation.getAllInsertQueries(df)
+    times = []
+
+    for index, query in enumerate(queries):
+        print(query)
+        insert_query = session.prepare(query)
+        insert_query.consistency_level = consistency_level
+        df = dataframes[index]
+        total_rows = len(df)
+        values = df.values.tolist()
+        start_time = time.time()
+        for idx, row in enumerate(values, start=1):
+            session.execute(insert_query, row)
+            # Print out the progress and estimated time of completion
+            if idx % 100 == 0:
+                elapsed_time = time.time() - start_time
+                rows_per_second = idx / elapsed_time
+                estimated_total_time = total_rows / rows_per_second
+                remaining_time = estimated_total_time - elapsed_time
+                print(
+                    f"Inserted {idx} of {total_rows} records ({(idx/total_rows)*100:.2f}%)"
+                )
+                print(f"Estimated time remaining: {remaining_time/60:.2f} minutes")
+        elapsed_time = time.time() - start_time
+        times.append(elapsed_time)
+    avg_time = sum(times) / len(times) if times else 0
+    print(f"Average insert time with {consistency_level}: {avg_time:.2f} seconds.")
 
 
 def dropAllTables(session: Session):
@@ -151,3 +184,28 @@ def loadDataIntoDataframe(recipes: object):
     columns = recipes.column_names
     data = [dict(zip(columns, row)) for row in recipes]
     return pd.DataFrame(data)
+
+
+def executeSelectQueries(session: Session, consistency_level, queries=[]):
+    avg_times = []
+    for query_text in queries:
+        times = []
+        for _ in range(10):  # Run each select 10 times
+            query = SimpleStatement(query_text, consistency_level=consistency_level)
+            start_time = time.time()
+            session.execute(query)
+            elapsed_time = time.time() - start_time
+            times.append(elapsed_time)
+        avg_time = sum(times) / len(times)
+        avg_times.append(avg_time)
+
+    overall_avg_time = sum(avg_times) / len(avg_times) if avg_times else 0
+    # Find the name of the consistency level for printing
+    consistency_name = [
+        name
+        for name, value in ConsistencyLevel.__dict__.items()
+        if value == consistency_level
+    ][0]
+    print(
+        f"Average select time with {consistency_name} = {consistency_level}: {overall_avg_time:.2f} seconds."
+    )
