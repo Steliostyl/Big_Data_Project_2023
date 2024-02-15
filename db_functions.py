@@ -142,29 +142,6 @@ def printAllTablesLength(session: Session):
         print(f"Table {table} has {len(ans)} rows.")
 
 
-def executeSelectQueries(session: Session) -> list[pd.DataFrame]:
-    answers = []
-    answers.append(loadDataIntoDataframe(executeSimpleSelectQuery(session)))
-    try:
-        answers.append(loadDataIntoDataframe(executeDateRangeQuery(session)))
-    except:
-        pass
-
-    return answers
-
-
-def executeDateRangeQuery(session: Session):
-    start_date = datetime(2012, 1, 1).strftime("%Y-%m-%d")
-    end_date = datetime(2012, 5, 31).strftime("%Y-%m-%d")
-
-    query = f"SELECT * FROM popular_recipes WHERE submitted >= '{start_date}' AND submitted <= '{end_date}'"
-    return session.execute(query)
-
-
-def executeSimpleSelectQuery(session: Session, table_name="popular_recipes"):
-    return session.execute(f"SELECT * FROM {table_name}")
-
-
 def decryptTimestamp(timestamp):
     return datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d")
 

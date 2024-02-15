@@ -3,13 +3,13 @@
 TABLES = {
     "popular_recipes": {
         "fields": {
+            "id": "int",
             "submitted": "date",
             "avg_rating": "float",
-            "id": "int",
             "name": "text",
         },
-        "primary_key": "PRIMARY KEY (submitted, avg_rating, id)",
-        "clustering_key": "WITH CLUSTERING ORDER BY (avg_rating DESC, id ASC)",
+        "primary_key": "PRIMARY KEY (id, submitted, avg_rating)",
+        "clustering_key": "WITH CLUSTERING ORDER BY (submitted ASC, avg_rating DESC)",
     },
     "recipes_keywords": {
         "fields": {
@@ -23,24 +23,24 @@ TABLES = {
     },
     "recipes_difficulty": {
         "fields": {
-            "submitted": "date",
-            "avg_rating": "float",
+            "difficulty": "text",
             "id": "int",
+            "avg_rating": "float",
             "name": "text",
         },
-        "primary_key": "PRIMARY KEY (submitted, avg_rating, id)",
+        "primary_key": "PRIMARY KEY (id, avg_rating, name)",
         "clustering_key": "WITH CLUSTERING ORDER BY (avg_rating DESC, id ASC)",
     },
     "recipes_tag_submitted": {
         "fields": {
-            "submitted": "date",
-            "avg_rating": "float",
             "id": "int",
             "tags": "set<text>",
+            "submitted": "date",
+            "avg_rating": "float",
             "name": "text",
         },
-        "primary_key": "PRIMARY KEY (submitted, avg_rating, id)",
-        "clustering_key": "WITH CLUSTERING ORDER BY (avg_rating DESC, id ASC)",
+        "primary_key": "PRIMARY KEY (id, submitted, avg_rating, name)",
+        "clustering_key": "WITH CLUSTERING ORDER BY (submitted DESC, avg_rating DESC, name ASC)",
     },
     "recipes_tag_rating": {
         "fields": {
