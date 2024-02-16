@@ -1,11 +1,12 @@
 import db_functions
 from cassandra import ConsistencyLevel
 import matplotlib.pyplot as plt
+from pprint import pprint
 
 
 def main():
     session = db_functions.connectToDB("paris")
-    operation_mode = "select"  # Choose mode: "insert" or "select"
+    operation_mode = "select"  # Choose mode: "insert" or "select" or "select-benchmark"
     consistency_levels = [
         ConsistencyLevel.TWO,
         ConsistencyLevel.QUORUM,
@@ -87,6 +88,25 @@ def main():
 
         fig.tight_layout()
         plt.show()
+
+    elif operation_mode == "select-benchmark":
+        for i in range(1, len(select_queries)):
+            print(select_queries[i])
+            answer = db_functions.loadDataIntoDataframe(
+                session.execute(select_queries[i])
+            )
+            if i == 0:
+                print(
+                    answer.sort_values(by="avg_rating", ascending=False)
+                    .head(30)
+                    .to_string(index=False)
+                )
+            elif i == 1:
+                pprint(answer.loc[0].to_dict())
+            else:
+                print(answer.head(30))
+            print()
+        exit()
 
 
 if __name__ == "__main__":
