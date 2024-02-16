@@ -6,7 +6,9 @@ from pprint import pprint
 
 def main():
     session = db_functions.connectToDB("paris")
-    operation_mode = "select"  # Choose mode: "insert" or "select" or "select-benchmark"
+    operation_mode = (
+        "select-benchmark"  # Choose mode: "insert" or "select" or "select-benchmark"
+    )
     consistency_levels = [
         ConsistencyLevel.TWO,
         ConsistencyLevel.QUORUM,
@@ -54,15 +56,21 @@ def main():
 
         plt.show()
 
-    elif operation_mode == "select":
-        for query in select_queries:
+    elif operation_mode == "select-benchmark":
+        df = None
+        for idx, query in enumerate(select_queries):
             print(f"Query: {query}")
             for level in consistency_levels:
-                avg_time = db_functions.executeSelectQueries(
-                    session, consistency_level=level, queries=[query]
+                avg_time, df = db_functions.executeSelectQueriesv2(
+                    session,
+                    consistency_level=level,
+                    queries=[query],
+                    df=df,
+                    query_idx=idx,
                 )
                 average_select_times[level].append(avg_time)
             print("Completed query execution at all consistency levels.\n")
+        df.to_excel("raw_data.xlsx", index=False)
 
         # Plotting the results
         labels = ["Query 1", "Query 2", "Query 3", "Query 4", "Query 5"]
@@ -89,7 +97,7 @@ def main():
         fig.tight_layout()
         plt.show()
 
-    elif operation_mode == "select-benchmark":
+    elif operation_mode == "select":
         for i in range(1, len(select_queries)):
             print(select_queries[i])
             answer = db_functions.loadDataIntoDataframe(

@@ -206,3 +206,63 @@ def executeSelectQueries(session: Session, consistency_level, queries=[]):
         f"Average select time with {consistency_name} = {consistency_level}: {avg_time:.4f} seconds."
     )
     return avg_time
+
+
+import pandas as pd
+import time
+from cassandra.query import SimpleStatement
+from cassandra import ConsistencyLevel
+from cassandra.cluster import Session
+
+
+def executeSelectQueriesv2(
+    session: Session, consistency_level, queries=[], df=None, query_idx=0
+):
+    start_time = time.time()
+    if df is None:
+        df = pd.DataFrame(
+            columns=["Query_Number", "Iteration", "Time", "Consistency_Level"]
+        )
+
+    for _, query_text in enumerate(queries, start=1):
+        for run in range(1, 11):  # Run each select 10 times
+            query = SimpleStatement(query_text, consistency_level=consistency_level)
+            query_number = f"Query_{query_idx + 1}"
+            query_start_time = time.time()
+            session.execute(query)
+            query_elapsed_time = time.time() - query_start_time
+            df = pd.concat(
+                [
+                    df,
+                    pd.DataFrame(
+                        [
+                            {
+                                "Query_Number": query_number,
+                                "Iteration": run,
+                                "Time": query_elapsed_time,
+                                "Consistency_Level": consistency_level,
+                            }
+                        ]
+                    ),
+                ],
+                ignore_index=True,
+            )
+
+    elapsed_time = time.time() - start_time
+    avg_time = elapsed_time / (len(queries) * 10)
+
+    # Find the name of the consistency level for printing
+    consistency_name = [
+        name
+        for name, value in ConsistencyLevel.__dict__.items()
+        if value == consistency_level
+    ][0]
+    print(
+        f"Average select time with {consistency_name} = {consistency_level}: {avg_time:.4f} seconds."
+    )
+
+    return avg_time, df
+
+
+# Example usage:
+# df, avg_time = executeSelectQueries(session, ConsistencyLevel.ONE, ["SELECT * FROM table1", "SELECT * FROM table2"])
