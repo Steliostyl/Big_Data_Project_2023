@@ -140,7 +140,7 @@ def insertDataWithConsistency(session: Session, consistency_level):
         for idx, row in enumerate(values, start=1):
             session.execute(insert_query, row)
             # Print out the progress and estimated time of completion
-            if idx % 100 == 0:
+            if idx % 1_000 == 0:
                 elapsed_time = time.time() - start_time
                 rows_per_second = idx / elapsed_time
                 estimated_total_time = total_rows / rows_per_second

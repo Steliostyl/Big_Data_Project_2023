@@ -114,6 +114,7 @@ def getAllInsertQueries(df: pd.DataFrame):
         if t == "recipes_tag_rating" or t == "recipes_tag_submitted":
             new_df = df.explode("tags")
             new_df.rename(columns={"tags": "tag"}, inplace=True)
+            new_df = new_df[new_df["tag"].str.strip() != ""]
 
         new_df = new_df[[k for k in TABLES[t]["fields"].keys()]]
         dataframes.append(new_df)
