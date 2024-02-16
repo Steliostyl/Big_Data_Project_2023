@@ -127,6 +127,37 @@ def insertData(session: Session):
 def insertDataWithConsistency(session: Session, consistency_level):
     df = mergeDataframes()
     (dataframes, queries) = query_generation.getAllInsertQueries(df)
+
+    start_time = time.time()
+    for index, query in enumerate(queries):
+        print(query)
+        insert_query = session.prepare(query)
+        insert_query.consistency_level = consistency_level
+        df = dataframes[index]
+        total_rows = len(df)
+        values = df.values.tolist()
+        for idx, row in enumerate(values, start=1):
+            session.execute(insert_query, row)
+            # Print out the progress and estimated time of completion
+            if idx % 1_000 == 0:
+                elapsed_time = time.time() - start_time
+                rows_per_second = idx / elapsed_time
+                estimated_total_time = total_rows / rows_per_second
+                remaining_time = estimated_total_time - elapsed_time
+                print(
+                    f"Inserted {idx} of {total_rows} records ({(idx/total_rows)*100:.2f}%)"
+                )
+                print(f"Estimated time remaining: {remaining_time/60:.2f} minutes")
+    elapsed_time = time.time() - start_time
+    # avg_time = sum(times) / len(times) if times else 0
+    # print(f"Average insert time with {consistency_level}: {avg_time:.2f} seconds.")
+    print(f"Elapsed time: {elapsed_time}")
+    return elapsed_time
+
+
+def insertDataWithConsistencyv2(session: Session, consistency_level):
+    df = mergeDataframes()
+    (dataframes, queries) = query_generation.getAllInsertQueries(df)
     times = []
 
     for index, query in enumerate(queries):
@@ -153,7 +184,6 @@ def insertDataWithConsistency(session: Session, consistency_level):
         times.append(elapsed_time)
     avg_time = sum(times) / len(times) if times else 0
     print(f"Average insert time with {consistency_level}: {avg_time:.2f} seconds.")
-    return avg_time
 
 
 def dropAllTables(session: Session):
@@ -206,13 +236,6 @@ def executeSelectQueries(session: Session, consistency_level, queries=[]):
         f"Average select time with {consistency_name} = {consistency_level}: {avg_time:.4f} seconds."
     )
     return avg_time
-
-
-import pandas as pd
-import time
-from cassandra.query import SimpleStatement
-from cassandra import ConsistencyLevel
-from cassandra.cluster import Session
 
 
 def executeSelectQueriesv2(

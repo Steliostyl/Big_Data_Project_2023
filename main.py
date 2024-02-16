@@ -2,13 +2,12 @@ import db_functions
 from cassandra import ConsistencyLevel
 import matplotlib.pyplot as plt
 from pprint import pprint
+import pandas as pd
 
 
 def main():
     session = db_functions.connectToDB("paris")
-    operation_mode = (
-        "select-benchmark"  # Choose mode: "insert" or "select" or "select-benchmark"
-    )
+    operation_mode = "insert"  # Choose mode: "insert" or "select" or "select-benchmark"
     consistency_levels = [
         ConsistencyLevel.TWO,
         ConsistencyLevel.QUORUM,
@@ -29,9 +28,18 @@ def main():
     if operation_mode == "insert":
         db_functions.dropAllTables(session)
         db_functions.createTables(session)
+        df_data = []
         for level in consistency_levels:
-            avg_time = db_functions.insertDataWithConsistency(session, level)
-            average_insert_times.append(avg_time)
+            for iteration in range(1, 6):
+                time = db_functions.insertDataWithConsistency(session, level)
+                df_data.append([level, iteration, time])
+            # average_insert_times.append(avg_time)
+
+        times_df = pd.DataFrame(
+            data=df_data, columns=["Consistency_Level", "Iteration", "Time"]
+        )
+        times_df.to_excel("raw_inserts.xlsx", index=False)
+
         print("Completed insert operations at all consistency levels.\n")
 
         # Plotting the results for insert operations
