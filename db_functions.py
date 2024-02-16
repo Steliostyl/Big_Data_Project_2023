@@ -153,6 +153,7 @@ def insertDataWithConsistency(session: Session, consistency_level):
         times.append(elapsed_time)
     avg_time = sum(times) / len(times) if times else 0
     print(f"Average insert time with {consistency_level}: {avg_time:.2f} seconds.")
+    return avg_time
 
 
 def dropAllTables(session: Session):
@@ -187,19 +188,14 @@ def loadDataIntoDataframe(recipes: object):
 
 
 def executeSelectQueries(session: Session, consistency_level, queries=[]):
-    avg_times = []
+    start_time = time.time()
     for query_text in queries:
-        times = []
         for _ in range(10):  # Run each select 10 times
             query = SimpleStatement(query_text, consistency_level=consistency_level)
-            start_time = time.time()
             session.execute(query)
-            elapsed_time = time.time() - start_time
-            times.append(elapsed_time)
-        avg_time = sum(times) / len(times)
-        avg_times.append(avg_time)
+    elapsed_time = time.time() - start_time
+    avg_time = elapsed_time / (len(queries) * 10)
 
-    overall_avg_time = sum(avg_times) / len(avg_times) if avg_times else 0
     # Find the name of the consistency level for printing
     consistency_name = [
         name
@@ -207,5 +203,6 @@ def executeSelectQueries(session: Session, consistency_level, queries=[]):
         if value == consistency_level
     ][0]
     print(
-        f"Average select time with {consistency_name} = {consistency_level}: {overall_avg_time:.2f} seconds."
+        f"Average select time with {consistency_name} = {consistency_level}: {avg_time:.4f} seconds."
     )
+    return avg_time
