@@ -8,7 +8,7 @@ recipes_df = pd.read_csv(DATASET_PATH + "RAW_recipes.csv")
 
 # Select 1,000 random records from recipes_df
 sample_recipes_df = recipes_df.sample(
-    n=100, random_state=42
+    n=1_000, random_state=42
 )  # Set a random state for reproducibility
 
 # Save the sample to a new CSV file
