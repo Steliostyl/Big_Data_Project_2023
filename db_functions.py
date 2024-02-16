@@ -9,6 +9,7 @@ import query_generation
 from datetime import datetime
 from cassandra.query import SimpleStatement
 
+
 CREDENTIALS_PATH = "credentials/"
 DATASET_PATH = "dataset/"
 SAT_QUERY = (
@@ -206,13 +207,6 @@ def executeSelectQueries(session: Session, consistency_level, queries=[]):
         f"Average select time with {consistency_name} = {consistency_level}: {avg_time:.4f} seconds."
     )
     return avg_time
-
-
-import pandas as pd
-import time
-from cassandra.query import SimpleStatement
-from cassandra import ConsistencyLevel
-from cassandra.cluster import Session
 
 
 def executeSelectQueriesv2(
